@@ -331,6 +331,186 @@ let voice_options = {
 		wav: 'pl-PL-Wavenet-B',
 		text: 'Polish male'
 	},
+	pl_achernar: {
+		language: 'pl-PL',
+		gender: 'female',
+		wav: 'pl-PL-Chirp3-HD-Achernar',
+		text: 'Polish female (Chirp3-HD)'
+	},
+	pl_achird: {
+		language: 'pl-PL',
+		gender: 'male',
+		wav: 'pl-PL-Chirp3-HD-Achird',
+		text: 'Polish male (Chirp3-HD)'
+	},
+	pl_algenib: {
+		language: 'pl-PL',
+		gender: 'male',
+		wav: 'pl-PL-Chirp3-HD-Algenib',
+		text: 'Polish male (Chirp3-HD)'
+	},
+	pl_algieba: {
+		language: 'pl-PL',
+		gender: 'male',
+		wav: 'pl-PL-Chirp3-HD-Algieba',
+		text: 'Polish male (Chirp3-HD)'
+	},
+	pl_alnilam: {
+		language: 'pl-PL',
+		gender: 'male',
+		wav: 'pl-PL-Chirp3-HD-Alnilam',
+		text: 'Polish male (Chirp3-HD)'
+	},
+	pl_aoede: {
+		language: 'pl-PL',
+		gender: 'female',
+		wav: 'pl-PL-Chirp3-HD-Aoede',
+		text: 'Polish female (Chirp3-HD)'
+	},
+	pl_autonoe: {
+		language: 'pl-PL',
+		gender: 'female',
+		wav: 'pl-PL-Chirp3-HD-Autonoe',
+		text: 'Polish female (Chirp3-HD)'
+	},
+	pl_callirrhoe: {
+		language: 'pl-PL',
+		gender: 'female',
+		wav: 'pl-PL-Chirp3-HD-Callirrhoe',
+		text: 'Polish female (Chirp3-HD)'
+	},
+	pl_charon: {
+		language: 'pl-PL',
+		gender: 'male',
+		wav: 'pl-PL-Chirp3-HD-Charon',
+		text: 'Polish male (Chirp3-HD)'
+	},
+	pl_despina: {
+		language: 'pl-PL',
+		gender: 'female',
+		wav: 'pl-PL-Chirp3-HD-Despina',
+		text: 'Polish female (Chirp3-HD)'
+	},
+	pl_enceladus: {
+		language: 'pl-PL',
+		gender: 'male',
+		wav: 'pl-PL-Chirp3-HD-Enceladus',
+		text: 'Polish male (Chirp3-HD)'
+	},
+	pl_erinome: {
+		language: 'pl-PL',
+		gender: 'female',
+		wav: 'pl-PL-Chirp3-HD-Erinome',
+		text: 'Polish female (Chirp3-HD)'
+	},
+	pl_fenrir: {
+		language: 'pl-PL',
+		gender: 'male',
+		wav: 'pl-PL-Chirp3-HD-Fenrir',
+		text: 'Polish male (Chirp3-HD)'
+	},
+	pl_gacrux: {
+		language: 'pl-PL',
+		gender: 'female',
+		wav: 'pl-PL-Chirp3-HD-Gacrux',
+		text: 'Polish female (Chirp3-HD)'
+	},
+	pl_iapetus: {
+		language: 'pl-PL',
+		gender: 'male',
+		wav: 'pl-PL-Chirp3-HD-Iapetus',
+		text: 'Polish male (Chirp3-HD)'
+	},
+	pl_kore: {
+		language: 'pl-PL',
+		gender: 'female',
+		wav: 'pl-PL-Chirp3-HD-Kore',
+		text: 'Polish female (Chirp3-HD)'
+	},
+	pl_laomedeia: {
+		language: 'pl-PL',
+		gender: 'female',
+		wav: 'pl-PL-Chirp3-HD-Laomedeia',
+		text: 'Polish female (Chirp3-HD)'
+	},
+	pl_leda: {
+		language: 'pl-PL',
+		gender: 'female',
+		wav: 'pl-PL-Chirp3-HD-Leda',
+		text: 'Polish female (Chirp3-HD)'
+	},
+	pl_orus: {
+		language: 'pl-PL',
+		gender: 'male',
+		wav: 'pl-PL-Chirp3-HD-Orus',
+		text: 'Polish male (Chirp3-HD)'
+	},
+	pl_puck: {
+		language: 'pl-PL',
+		gender: 'male',
+		wav: 'pl-PL-Chirp3-HD-Puck',
+		text: 'Polish male (Chirp3-HD)'
+	},
+	pl_pulcherrima: {
+		language: 'pl-PL',
+		gender: 'female',
+		wav: 'pl-PL-Chirp3-HD-Pulcherrima',
+		text: 'Polish female (Chirp3-HD)'
+	},
+	pl_rasalgethi: {
+		language: 'pl-PL',
+		gender: 'male',
+		wav: 'pl-PL-Chirp3-HD-Rasalgethi',
+		text: 'Polish male (Chirp3-HD)'
+	},
+	pl_sadachbia: {
+		language: 'pl-PL',
+		gender: 'male',
+		wav: 'pl-PL-Chirp3-HD-Sadachbia',
+		text: 'Polish male (Chirp3-HD)'
+	},
+	pl_sadaltager: {
+		language: 'pl-PL',
+		gender: 'male',
+		wav: 'pl-PL-Chirp3-HD-Sadaltager',
+		text: 'Polish male (Chirp3-HD)'
+	},
+	pl_schedar: {
+		language: 'pl-PL',
+		gender: 'male',
+		wav: 'pl-PL-Chirp3-HD-Schedar',
+		text: 'Polish male (Chirp3-HD)'
+	},
+	pl_sulafat: {
+		language: 'pl-PL',
+		gender: 'female',
+		wav: 'pl-PL-Chirp3-HD-Sulafat',
+		text: 'Polish female (Chirp3-HD)'
+	},
+	pl_umbriel: {
+		language: 'pl-PL',
+		gender: 'male',
+		wav: 'pl-PL-Chirp3-HD-Umbriel',
+		text: 'Polish male (Chirp3-HD)'
+	},
+	pl_vindemiatrix: {
+		language: 'pl-PL',
+		gender: 'female',
+		wav: 'pl-PL-Chirp3-HD-Vindemiatrix',
+		text: 'Polish female (Chirp3-HD)'
+	},
+	pl_zephyr: {
+		language: 'pl-PL',
+		gender: 'female',
+		wav: 'pl-PL-Chirp3-HD-Zephyr',
+		text: 'Polish female (Chirp3-HD)'
+	},
+	pl_zubenelgenubi: {
+		language: 'pl-PL',
+		gender: 'male',
+		wav: 'pl-PL-Chirp3-HD-Zubenelgenubi',
+		text: 'Polish male (Chirp3-HD)'
+	},
 	maria: {
 		language: 'pt-PT',
 		gender: 'female',
