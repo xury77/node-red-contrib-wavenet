@@ -5,6 +5,7 @@
         defaults: {
             name: { value: "Wavenet" },
             key: { value: "", type: "wavenet-config" },
+            language: { value: "pl-PL" },
             voice: { value: "random" },
             rate: { value: "1.0" },
             pitch: {
@@ -37,7 +38,19 @@
             return this.voice || "wavenet";
         },
         oneditprepare: function() {
+            var $langSel = $("#node-input-language");
+            $langSel.empty();
+            (WAVENET_LANGUAGES || []).forEach(function(l) {
+                $langSel.append($("<option></option>").attr("value", l.code).text(l.name));
+            });
+            var lang = this.language || (WAVENET_VOICE_TO_LANG && WAVENET_VOICE_TO_LANG[this.voice]) || "pl-PL";
+            if ($langSel.find("option[value='" + lang + "']").length) $langSel.val(lang);
+            else if (WAVENET_LANGUAGES && WAVENET_LANGUAGES.length) $langSel.val(WAVENET_LANGUAGES[0].code);
+            WAVENET_POPULATE_VOICES($langSel.val());
             $("#node-input-voice").val(this.voice || "random");
+            $langSel.off("change").on("change", function() {
+                WAVENET_POPULATE_VOICES($(this).val());
+            });
             $("#node-input-rate").val(this.rate || "1.0");
             $("#node-input-pitch").val(this.pitch || 0);
             $("#node-input-volume").val(this.volume || 0);
@@ -60,6 +73,230 @@
     });
 </script>
 
+<script type="text/javascript">
+(function() {
+    var VOICES_LIST = [
+        { value: 'random', text: 'Random', lang: '' },
+        { value: 'random_pl', text: 'Random only Polish', lang: 'pl-PL' },
+        { value: 'amina', text: 'Amina (Arabian female)', lang: 'ar-XA' }, { value: 'amir', text: 'Amir (Arabian male)', lang: 'ar-XA' },
+        { value: 'chen', text: 'Chen (Chinese Mandarin female)', lang: 'cmn-CN' }, { value: 'chang', text: 'Chang (Chinese Mandarin male)', lang: 'cmn-CN' },
+        { value: 'hu', text: 'Hu (Chinese Mandarin male)', lang: 'cmn-CN' }, { value: 'mei', text: 'Mei (Chinese Mandarin female)', lang: 'cmn-CN' },
+        { value: 'lucie', text: 'Lucie (Czech female)', lang: 'cs-CZ' },
+        { value: 'anne', text: 'Anne (Danish female)', lang: 'da-DK' }, { value: 'lucas', text: 'Lucas (Danish male)', lang: 'da-DK' },
+        { value: 'janjaap', text: 'Janjaap (Dutch male)', lang: 'nl-Nl' }, { value: 'kees', text: 'Kees (Dutch male)', lang: 'nl-Nl' },
+        { value: 'sjaan', text: 'Sjaan (Dutch female)', lang: 'nl-Nl' }, { value: 'bep', text: 'Bep (Dutch female)', lang: 'nl-Nl' }, { value: 'miep', text: 'Miep (Dutch female)', lang: 'nl-Nl' },
+        { value: 'russel', text: 'Russel (Australian male)', lang: 'en-AU' }, { value: 'thomas', text: 'Thomas (Australian male)', lang: 'en-AU' },
+        { value: 'nicole', text: 'Nicole (Australian female)', lang: 'en-AU' }, { value: 'mary', text: 'Mary (Australian female)', lang: 'en-AU' },
+        { value: 'brian', text: 'Brian (British male)', lang: 'en-GB' }, { value: 'emma', text: 'Emma (British female)', lang: 'en-GB' }, { value: 'amy', text: 'Amy (British female)', lang: 'en-GB' },
+        { value: 'aparna', text: 'Aparna (Indian female)', lang: 'en-IN' }, { value: 'rahul', text: 'Rahul (Indian male)', lang: 'en-IN' },
+        { value: 'mathew', text: 'Mathew (American male)', lang: 'en-US' }, { value: 'justin', text: 'Justin (American male)', lang: 'en-US' },
+        { value: 'joanna', text: 'Joanna (American female)', lang: 'en-US' }, { value: 'ivy', text: 'Ivy (American female)', lang: 'en-US' },
+        { value: 'kimberly', text: 'Kimberly (American female)', lang: 'en-US' }, { value: 'salli', text: 'Salli (American female)', lang: 'en-US' },
+        { value: 'ella', text: 'Ella (Finnish female)', lang: 'fi-FI' },
+        { value: 'darna', text: 'Darna (Filipino female)', lang: 'fil-PH' },
+        { value: 'olivia', text: 'Olivia (French Canadian female)', lang: 'fr-CA' }, { value: 'liam', text: 'Liam (French Canadian male)', lang: 'fr-CA' },
+        { value: 'sarah', text: 'Sarah (French female)', lang: 'fr-FR' }, { value: 'victor', text: 'Victor (French male)', lang: 'fr-FR' },
+        { value: 'sofia', text: 'Sofia (German female)', lang: 'de-DE' }, { value: 'ben', text: 'Ben (German male)', lang: 'de-DE' },
+        { value: 'lyra', text: 'Lyra (Greek female)', lang: 'el-GR' },
+        { value: 'simran', text: 'Simran (Hindi female)', lang: 'hi-IN' }, { value: 'jai', text: 'Jai (Hindi male)', lang: 'hi-IN' },
+        { value: 'nora', text: 'Nora (Hungarian female)', lang: 'hu-HU' },
+        { value: 'melati', text: 'Melati (Indonesian female)', lang: 'id-ID' }, { value: 'agung', text: 'Agung (Indonesian male)', lang: 'id-ID' },
+        { value: 'gabriella', text: 'Gabriella (Italian female)', lang: 'it-IT' }, { value: 'antonio', text: 'Antonio (Italian male)', lang: 'it-IT' },
+        { value: 'yuna', text: 'Yuna (Japanese female)', lang: 'ja-JP' }, { value: 'asahi', text: 'Asahi (Japanese male)', lang: 'ja-JP' },
+        { value: 'misun', text: 'Misun (Korean female)', lang: 'ko-KR' }, { value: 'kyong', text: 'Kyong (Korean male)', lang: 'ko-KR' },
+        { value: 'leah', text: 'Leah (Norwegian female)', lang: 'nb-NO' }, { value: 'lucas', text: 'Lucas (Norwegian male)', lang: 'nb-NO' },
+        { value: 'amelia', text: 'Amelia (Polish female, Wavenet)', lang: 'pl-PL' }, { value: 'filip', text: 'Filip (Polish male, Wavenet)', lang: 'pl-PL' },
+        { value: 'pl_achernar', text: 'Achernar (Chirp3-HD)', lang: 'pl-PL' }, { value: 'pl_achird', text: 'Achird (Chirp3-HD)', lang: 'pl-PL' },
+        { value: 'pl_algenib', text: 'Algenib (Chirp3-HD)', lang: 'pl-PL' }, { value: 'pl_algieba', text: 'Algieba (Chirp3-HD)', lang: 'pl-PL' },
+        { value: 'pl_alnilam', text: 'Alnilam (Chirp3-HD)', lang: 'pl-PL' }, { value: 'pl_aoede', text: 'Aoede (Chirp3-HD)', lang: 'pl-PL' },
+        { value: 'pl_autonoe', text: 'Autonoe (Chirp3-HD)', lang: 'pl-PL' }, { value: 'pl_callirrhoe', text: 'Callirrhoe (Chirp3-HD)', lang: 'pl-PL' },
+        { value: 'pl_charon', text: 'Charon (Chirp3-HD)', lang: 'pl-PL' }, { value: 'pl_despina', text: 'Despina (Chirp3-HD)', lang: 'pl-PL' },
+        { value: 'pl_enceladus', text: 'Enceladus (Chirp3-HD)', lang: 'pl-PL' }, { value: 'pl_erinome', text: 'Erinome (Chirp3-HD)', lang: 'pl-PL' },
+        { value: 'pl_fenrir', text: 'Fenrir (Chirp3-HD)', lang: 'pl-PL' }, { value: 'pl_gacrux', text: 'Gacrux (Chirp3-HD)', lang: 'pl-PL' },
+        { value: 'pl_iapetus', text: 'Iapetus (Chirp3-HD)', lang: 'pl-PL' }, { value: 'pl_kore', text: 'Kore (Chirp3-HD)', lang: 'pl-PL' },
+        { value: 'pl_laomedeia', text: 'Laomedeia (Chirp3-HD)', lang: 'pl-PL' }, { value: 'pl_leda', text: 'Leda (Chirp3-HD)', lang: 'pl-PL' },
+        { value: 'pl_orus', text: 'Orus (Chirp3-HD)', lang: 'pl-PL' }, { value: 'pl_puck', text: 'Puck (Chirp3-HD)', lang: 'pl-PL' },
+        { value: 'pl_pulcherrima', text: 'Pulcherrima (Chirp3-HD)', lang: 'pl-PL' }, { value: 'pl_rasalgethi', text: 'Rasalgethi (Chirp3-HD)', lang: 'pl-PL' },
+        { value: 'pl_sadachbia', text: 'Sadachbia (Chirp3-HD)', lang: 'pl-PL' }, { value: 'pl_sadaltager', text: 'Sadaltager (Chirp3-HD)', lang: 'pl-PL' },
+        { value: 'pl_schedar', text: 'Schedar (Chirp3-HD)', lang: 'pl-PL' }, { value: 'pl_sulafat', text: 'Sulafat (Chirp3-HD)', lang: 'pl-PL' },
+        { value: 'pl_umbriel', text: 'Umbriel (Chirp3-HD)', lang: 'pl-PL' }, { value: 'pl_vindemiatrix', text: 'Vindemiatrix (Chirp3-HD)', lang: 'pl-PL' },
+        { value: 'pl_zephyr', text: 'Zephyr (Chirp3-HD)', lang: 'pl-PL' }, { value: 'pl_zubenelgenubi', text: 'Zubenelgenubi (Chirp3-HD)', lang: 'pl-PL' },
+        { value: 'maria', text: 'Maria (Portuguese female)', lang: 'pt-PT' }, { value: 'tomas', text: 'Tomas (Portuguese male)', lang: 'pt-PT' },
+        { value: 'nadia', text: 'Nadia (Russian female)', lang: 'ru-RU' }, { value: 'anatoly', text: 'Anatoly (Russian male)', lang: 'ru-RU' },
+        { value: 'laura', text: 'Laura (Slovak female)', lang: 'sk-SK' },
+        { value: 'lilly', text: 'Lilly (Swedish female)', lang: 'sv-SE' },
+        { value: 'defne', text: 'Defne (Turkish female)', lang: 'tr-TR' }, { value: 'yusuf', text: 'Yusuf (Turkish male)', lang: 'tr-TR' },
+        { value: 'alina', text: 'Alina (Ukrainian female)', lang: 'uk-UA' },
+        { value: 'bian', text: 'Bian (Vietnamese female)', lang: 'vi-VN' }, { value: 'danh', text: 'Danh (Vietnamese male)', lang: 'vi-VN' },
+        // German (de-DE) Chirp3-HD + Neural2/Studio/Wavenet
+        { value: 'de_DE_achernar', text: 'Achernar (Chirp3-HD)', lang: 'de-DE' }, { value: 'de_DE_achird', text: 'Achird (Chirp3-HD)', lang: 'de-DE' },
+        { value: 'de_DE_algenib', text: 'Algenib (Chirp3-HD)', lang: 'de-DE' }, { value: 'de_DE_algieba', text: 'Algieba (Chirp3-HD)', lang: 'de-DE' },
+        { value: 'de_DE_alnilam', text: 'Alnilam (Chirp3-HD)', lang: 'de-DE' }, { value: 'de_DE_aoede', text: 'Aoede (Chirp3-HD)', lang: 'de-DE' },
+        { value: 'de_DE_autonoe', text: 'Autonoe (Chirp3-HD)', lang: 'de-DE' }, { value: 'de_DE_callirrhoe', text: 'Callirrhoe (Chirp3-HD)', lang: 'de-DE' },
+        { value: 'de_DE_charon', text: 'Charon (Chirp3-HD)', lang: 'de-DE' }, { value: 'de_DE_despina', text: 'Despina (Chirp3-HD)', lang: 'de-DE' },
+        { value: 'de_DE_enceladus', text: 'Enceladus (Chirp3-HD)', lang: 'de-DE' }, { value: 'de_DE_erinome', text: 'Erinome (Chirp3-HD)', lang: 'de-DE' },
+        { value: 'de_DE_fenrir', text: 'Fenrir (Chirp3-HD)', lang: 'de-DE' }, { value: 'de_DE_gacrux', text: 'Gacrux (Chirp3-HD)', lang: 'de-DE' },
+        { value: 'de_DE_iapetus', text: 'Iapetus (Chirp3-HD)', lang: 'de-DE' }, { value: 'de_DE_kore', text: 'Kore (Chirp3-HD)', lang: 'de-DE' },
+        { value: 'de_DE_laomedeia', text: 'Laomedeia (Chirp3-HD)', lang: 'de-DE' }, { value: 'de_DE_leda', text: 'Leda (Chirp3-HD)', lang: 'de-DE' },
+        { value: 'de_DE_orus', text: 'Orus (Chirp3-HD)', lang: 'de-DE' }, { value: 'de_DE_puck', text: 'Puck (Chirp3-HD)', lang: 'de-DE' },
+        { value: 'de_DE_pulcherrima', text: 'Pulcherrima (Chirp3-HD)', lang: 'de-DE' }, { value: 'de_DE_rasalgethi', text: 'Rasalgethi (Chirp3-HD)', lang: 'de-DE' },
+        { value: 'de_DE_sadachbia', text: 'Sadachbia (Chirp3-HD)', lang: 'de-DE' }, { value: 'de_DE_sadaltager', text: 'Sadaltager (Chirp3-HD)', lang: 'de-DE' },
+        { value: 'de_DE_schedar', text: 'Schedar (Chirp3-HD)', lang: 'de-DE' }, { value: 'de_DE_sulafat', text: 'Sulafat (Chirp3-HD)', lang: 'de-DE' },
+        { value: 'de_DE_umbriel', text: 'Umbriel (Chirp3-HD)', lang: 'de-DE' }, { value: 'de_DE_vindemiatrix', text: 'Vindemiatrix (Chirp3-HD)', lang: 'de-DE' },
+        { value: 'de_DE_zephyr', text: 'Zephyr (Chirp3-HD)', lang: 'de-DE' }, { value: 'de_DE_zubenelgenubi', text: 'Zubenelgenubi (Chirp3-HD)', lang: 'de-DE' },
+        { value: 'de_DE_neural2_g', text: 'Neural2 G', lang: 'de-DE' }, { value: 'de_DE_neural2_h', text: 'Neural2 H', lang: 'de-DE' },
+        { value: 'de_DE_wavenet_g', text: 'Wavenet G', lang: 'de-DE' }, { value: 'de_DE_wavenet_h', text: 'Wavenet H', lang: 'de-DE' },
+        { value: 'de_DE_studio_b', text: 'Studio B', lang: 'de-DE' }, { value: 'de_DE_studio_c', text: 'Studio C', lang: 'de-DE' },
+        // Spanish Spain (es-ES)
+        { value: 'es_ES_achernar', text: 'Achernar (Chirp3-HD)', lang: 'es-ES' }, { value: 'es_ES_achird', text: 'Achird (Chirp3-HD)', lang: 'es-ES' },
+        { value: 'es_ES_algenib', text: 'Algenib (Chirp3-HD)', lang: 'es-ES' }, { value: 'es_ES_algieba', text: 'Algieba (Chirp3-HD)', lang: 'es-ES' },
+        { value: 'es_ES_alnilam', text: 'Alnilam (Chirp3-HD)', lang: 'es-ES' }, { value: 'es_ES_aoede', text: 'Aoede (Chirp3-HD)', lang: 'es-ES' },
+        { value: 'es_ES_autonoe', text: 'Autonoe (Chirp3-HD)', lang: 'es-ES' }, { value: 'es_ES_callirrhoe', text: 'Callirrhoe (Chirp3-HD)', lang: 'es-ES' },
+        { value: 'es_ES_charon', text: 'Charon (Chirp3-HD)', lang: 'es-ES' }, { value: 'es_ES_despina', text: 'Despina (Chirp3-HD)', lang: 'es-ES' },
+        { value: 'es_ES_enceladus', text: 'Enceladus (Chirp3-HD)', lang: 'es-ES' }, { value: 'es_ES_erinome', text: 'Erinome (Chirp3-HD)', lang: 'es-ES' },
+        { value: 'es_ES_fenrir', text: 'Fenrir (Chirp3-HD)', lang: 'es-ES' }, { value: 'es_ES_gacrux', text: 'Gacrux (Chirp3-HD)', lang: 'es-ES' },
+        { value: 'es_ES_iapetus', text: 'Iapetus (Chirp3-HD)', lang: 'es-ES' }, { value: 'es_ES_kore', text: 'Kore (Chirp3-HD)', lang: 'es-ES' },
+        { value: 'es_ES_laomedeia', text: 'Laomedeia (Chirp3-HD)', lang: 'es-ES' }, { value: 'es_ES_leda', text: 'Leda (Chirp3-HD)', lang: 'es-ES' },
+        { value: 'es_ES_orus', text: 'Orus (Chirp3-HD)', lang: 'es-ES' }, { value: 'es_ES_puck', text: 'Puck (Chirp3-HD)', lang: 'es-ES' },
+        { value: 'es_ES_pulcherrima', text: 'Pulcherrima (Chirp3-HD)', lang: 'es-ES' }, { value: 'es_ES_rasalgethi', text: 'Rasalgethi (Chirp3-HD)', lang: 'es-ES' },
+        { value: 'es_ES_sadachbia', text: 'Sadachbia (Chirp3-HD)', lang: 'es-ES' }, { value: 'es_ES_sadaltager', text: 'Sadaltager (Chirp3-HD)', lang: 'es-ES' },
+        { value: 'es_ES_schedar', text: 'Schedar (Chirp3-HD)', lang: 'es-ES' }, { value: 'es_ES_sulafat', text: 'Sulafat (Chirp3-HD)', lang: 'es-ES' },
+        { value: 'es_ES_umbriel', text: 'Umbriel (Chirp3-HD)', lang: 'es-ES' }, { value: 'es_ES_vindemiatrix', text: 'Vindemiatrix (Chirp3-HD)', lang: 'es-ES' },
+        { value: 'es_ES_zephyr', text: 'Zephyr (Chirp3-HD)', lang: 'es-ES' }, { value: 'es_ES_zubenelgenubi', text: 'Zubenelgenubi (Chirp3-HD)', lang: 'es-ES' },
+        { value: 'es_ES_neural2_a', text: 'Neural2 A', lang: 'es-ES' }, { value: 'es_ES_wavenet_e', text: 'Wavenet E', lang: 'es-ES' },
+        { value: 'es_ES_wavenet_f', text: 'Wavenet F', lang: 'es-ES' }, { value: 'es_ES_studio_c', text: 'Studio C', lang: 'es-ES' }, { value: 'es_ES_studio_f', text: 'Studio F', lang: 'es-ES' },
+        // Spanish US (es-US)
+        { value: 'es_US_achernar', text: 'Achernar (Chirp3-HD)', lang: 'es-US' }, { value: 'es_US_achird', text: 'Achird (Chirp3-HD)', lang: 'es-US' },
+        { value: 'es_US_algenib', text: 'Algenib (Chirp3-HD)', lang: 'es-US' }, { value: 'es_US_algieba', text: 'Algieba (Chirp3-HD)', lang: 'es-US' },
+        { value: 'es_US_alnilam', text: 'Alnilam (Chirp3-HD)', lang: 'es-US' }, { value: 'es_US_aoede', text: 'Aoede (Chirp3-HD)', lang: 'es-US' },
+        { value: 'es_US_autonoe', text: 'Autonoe (Chirp3-HD)', lang: 'es-US' }, { value: 'es_US_callirrhoe', text: 'Callirrhoe (Chirp3-HD)', lang: 'es-US' },
+        { value: 'es_US_charon', text: 'Charon (Chirp3-HD)', lang: 'es-US' }, { value: 'es_US_despina', text: 'Despina (Chirp3-HD)', lang: 'es-US' },
+        { value: 'es_US_enceladus', text: 'Enceladus (Chirp3-HD)', lang: 'es-US' }, { value: 'es_US_erinome', text: 'Erinome (Chirp3-HD)', lang: 'es-US' },
+        { value: 'es_US_fenrir', text: 'Fenrir (Chirp3-HD)', lang: 'es-US' }, { value: 'es_US_gacrux', text: 'Gacrux (Chirp3-HD)', lang: 'es-US' },
+        { value: 'es_US_iapetus', text: 'Iapetus (Chirp3-HD)', lang: 'es-US' }, { value: 'es_US_kore', text: 'Kore (Chirp3-HD)', lang: 'es-US' },
+        { value: 'es_US_laomedeia', text: 'Laomedeia (Chirp3-HD)', lang: 'es-US' }, { value: 'es_US_leda', text: 'Leda (Chirp3-HD)', lang: 'es-US' },
+        { value: 'es_US_orus', text: 'Orus (Chirp3-HD)', lang: 'es-US' }, { value: 'es_US_puck', text: 'Puck (Chirp3-HD)', lang: 'es-US' },
+        { value: 'es_US_pulcherrima', text: 'Pulcherrima (Chirp3-HD)', lang: 'es-US' }, { value: 'es_US_rasalgethi', text: 'Rasalgethi (Chirp3-HD)', lang: 'es-US' },
+        { value: 'es_US_sadachbia', text: 'Sadachbia (Chirp3-HD)', lang: 'es-US' }, { value: 'es_US_sadaltager', text: 'Sadaltager (Chirp3-HD)', lang: 'es-US' },
+        { value: 'es_US_schedar', text: 'Schedar (Chirp3-HD)', lang: 'es-US' }, { value: 'es_US_sulafat', text: 'Sulafat (Chirp3-HD)', lang: 'es-US' },
+        { value: 'es_US_umbriel', text: 'Umbriel (Chirp3-HD)', lang: 'es-US' }, { value: 'es_US_vindemiatrix', text: 'Vindemiatrix (Chirp3-HD)', lang: 'es-US' },
+        { value: 'es_US_zephyr', text: 'Zephyr (Chirp3-HD)', lang: 'es-US' }, { value: 'es_US_zubenelgenubi', text: 'Zubenelgenubi (Chirp3-HD)', lang: 'es-US' },
+        { value: 'es_US_neural2_a', text: 'Neural2 A', lang: 'es-US' }, { value: 'es_US_wavenet_a', text: 'Wavenet A', lang: 'es-US' },
+        { value: 'es_US_wavenet_b', text: 'Wavenet B', lang: 'es-US' }, { value: 'es_US_studio_b', text: 'Studio B', lang: 'es-US' },
+        // French France (fr-FR) Chirp3-HD + Neural2/Studio
+        { value: 'fr_FR_achernar', text: 'Achernar (Chirp3-HD)', lang: 'fr-FR' }, { value: 'fr_FR_achird', text: 'Achird (Chirp3-HD)', lang: 'fr-FR' },
+        { value: 'fr_FR_algenib', text: 'Algenib (Chirp3-HD)', lang: 'fr-FR' }, { value: 'fr_FR_algieba', text: 'Algieba (Chirp3-HD)', lang: 'fr-FR' },
+        { value: 'fr_FR_alnilam', text: 'Alnilam (Chirp3-HD)', lang: 'fr-FR' }, { value: 'fr_FR_aoede', text: 'Aoede (Chirp3-HD)', lang: 'fr-FR' },
+        { value: 'fr_FR_autonoe', text: 'Autonoe (Chirp3-HD)', lang: 'fr-FR' }, { value: 'fr_FR_callirrhoe', text: 'Callirrhoe (Chirp3-HD)', lang: 'fr-FR' },
+        { value: 'fr_FR_charon', text: 'Charon (Chirp3-HD)', lang: 'fr-FR' }, { value: 'fr_FR_despina', text: 'Despina (Chirp3-HD)', lang: 'fr-FR' },
+        { value: 'fr_FR_enceladus', text: 'Enceladus (Chirp3-HD)', lang: 'fr-FR' }, { value: 'fr_FR_erinome', text: 'Erinome (Chirp3-HD)', lang: 'fr-FR' },
+        { value: 'fr_FR_fenrir', text: 'Fenrir (Chirp3-HD)', lang: 'fr-FR' }, { value: 'fr_FR_gacrux', text: 'Gacrux (Chirp3-HD)', lang: 'fr-FR' },
+        { value: 'fr_FR_iapetus', text: 'Iapetus (Chirp3-HD)', lang: 'fr-FR' }, { value: 'fr_FR_kore', text: 'Kore (Chirp3-HD)', lang: 'fr-FR' },
+        { value: 'fr_FR_laomedeia', text: 'Laomedeia (Chirp3-HD)', lang: 'fr-FR' }, { value: 'fr_FR_leda', text: 'Leda (Chirp3-HD)', lang: 'fr-FR' },
+        { value: 'fr_FR_orus', text: 'Orus (Chirp3-HD)', lang: 'fr-FR' }, { value: 'fr_FR_puck', text: 'Puck (Chirp3-HD)', lang: 'fr-FR' },
+        { value: 'fr_FR_pulcherrima', text: 'Pulcherrima (Chirp3-HD)', lang: 'fr-FR' }, { value: 'fr_FR_rasalgethi', text: 'Rasalgethi (Chirp3-HD)', lang: 'fr-FR' },
+        { value: 'fr_FR_sadachbia', text: 'Sadachbia (Chirp3-HD)', lang: 'fr-FR' }, { value: 'fr_FR_sadaltager', text: 'Sadaltager (Chirp3-HD)', lang: 'fr-FR' },
+        { value: 'fr_FR_schedar', text: 'Schedar (Chirp3-HD)', lang: 'fr-FR' }, { value: 'fr_FR_sulafat', text: 'Sulafat (Chirp3-HD)', lang: 'fr-FR' },
+        { value: 'fr_FR_umbriel', text: 'Umbriel (Chirp3-HD)', lang: 'fr-FR' }, { value: 'fr_FR_vindemiatrix', text: 'Vindemiatrix (Chirp3-HD)', lang: 'fr-FR' },
+        { value: 'fr_FR_zephyr', text: 'Zephyr (Chirp3-HD)', lang: 'fr-FR' }, { value: 'fr_FR_zubenelgenubi', text: 'Zubenelgenubi (Chirp3-HD)', lang: 'fr-FR' },
+        { value: 'fr_FR_neural2_f', text: 'Neural2 F', lang: 'fr-FR' }, { value: 'fr_FR_neural2_g', text: 'Neural2 G', lang: 'fr-FR' },
+        { value: 'fr_FR_studio_a', text: 'Studio A', lang: 'fr-FR' }, { value: 'fr_FR_studio_d', text: 'Studio D', lang: 'fr-FR' },
+        // Italian (it-IT) Chirp3-HD + Neural2/Wavenet
+        { value: 'it_IT_achernar', text: 'Achernar (Chirp3-HD)', lang: 'it-IT' }, { value: 'it_IT_achird', text: 'Achird (Chirp3-HD)', lang: 'it-IT' },
+        { value: 'it_IT_algenib', text: 'Algenib (Chirp3-HD)', lang: 'it-IT' }, { value: 'it_IT_algieba', text: 'Algieba (Chirp3-HD)', lang: 'it-IT' },
+        { value: 'it_IT_alnilam', text: 'Alnilam (Chirp3-HD)', lang: 'it-IT' }, { value: 'it_IT_aoede', text: 'Aoede (Chirp3-HD)', lang: 'it-IT' },
+        { value: 'it_IT_autonoe', text: 'Autonoe (Chirp3-HD)', lang: 'it-IT' }, { value: 'it_IT_callirrhoe', text: 'Callirrhoe (Chirp3-HD)', lang: 'it-IT' },
+        { value: 'it_IT_charon', text: 'Charon (Chirp3-HD)', lang: 'it-IT' }, { value: 'it_IT_despina', text: 'Despina (Chirp3-HD)', lang: 'it-IT' },
+        { value: 'it_IT_enceladus', text: 'Enceladus (Chirp3-HD)', lang: 'it-IT' }, { value: 'it_IT_erinome', text: 'Erinome (Chirp3-HD)', lang: 'it-IT' },
+        { value: 'it_IT_fenrir', text: 'Fenrir (Chirp3-HD)', lang: 'it-IT' }, { value: 'it_IT_gacrux', text: 'Gacrux (Chirp3-HD)', lang: 'it-IT' },
+        { value: 'it_IT_iapetus', text: 'Iapetus (Chirp3-HD)', lang: 'it-IT' }, { value: 'it_IT_kore', text: 'Kore (Chirp3-HD)', lang: 'it-IT' },
+        { value: 'it_IT_laomedeia', text: 'Laomedeia (Chirp3-HD)', lang: 'it-IT' }, { value: 'it_IT_leda', text: 'Leda (Chirp3-HD)', lang: 'it-IT' },
+        { value: 'it_IT_orus', text: 'Orus (Chirp3-HD)', lang: 'it-IT' }, { value: 'it_IT_puck', text: 'Puck (Chirp3-HD)', lang: 'it-IT' },
+        { value: 'it_IT_pulcherrima', text: 'Pulcherrima (Chirp3-HD)', lang: 'it-IT' }, { value: 'it_IT_rasalgethi', text: 'Rasalgethi (Chirp3-HD)', lang: 'it-IT' },
+        { value: 'it_IT_sadachbia', text: 'Sadachbia (Chirp3-HD)', lang: 'it-IT' }, { value: 'it_IT_sadaltager', text: 'Sadaltager (Chirp3-HD)', lang: 'it-IT' },
+        { value: 'it_IT_schedar', text: 'Schedar (Chirp3-HD)', lang: 'it-IT' }, { value: 'it_IT_sulafat', text: 'Sulafat (Chirp3-HD)', lang: 'it-IT' },
+        { value: 'it_IT_umbriel', text: 'Umbriel (Chirp3-HD)', lang: 'it-IT' }, { value: 'it_IT_vindemiatrix', text: 'Vindemiatrix (Chirp3-HD)', lang: 'it-IT' },
+        { value: 'it_IT_zephyr', text: 'Zephyr (Chirp3-HD)', lang: 'it-IT' }, { value: 'it_IT_zubenelgenubi', text: 'Zubenelgenubi (Chirp3-HD)', lang: 'it-IT' },
+        { value: 'it_IT_neural2_a', text: 'Neural2 A', lang: 'it-IT' }, { value: 'it_IT_wavenet_e', text: 'Wavenet E', lang: 'it-IT' }, { value: 'it_IT_wavenet_f', text: 'Wavenet F', lang: 'it-IT' },
+        // Portuguese Brazil (pt-BR)
+        { value: 'pt_BR_achernar', text: 'Achernar (Chirp3-HD)', lang: 'pt-BR' }, { value: 'pt_BR_achird', text: 'Achird (Chirp3-HD)', lang: 'pt-BR' },
+        { value: 'pt_BR_algenib', text: 'Algenib (Chirp3-HD)', lang: 'pt-BR' }, { value: 'pt_BR_algieba', text: 'Algieba (Chirp3-HD)', lang: 'pt-BR' },
+        { value: 'pt_BR_alnilam', text: 'Alnilam (Chirp3-HD)', lang: 'pt-BR' }, { value: 'pt_BR_aoede', text: 'Aoede (Chirp3-HD)', lang: 'pt-BR' },
+        { value: 'pt_BR_autonoe', text: 'Autonoe (Chirp3-HD)', lang: 'pt-BR' }, { value: 'pt_BR_callirrhoe', text: 'Callirrhoe (Chirp3-HD)', lang: 'pt-BR' },
+        { value: 'pt_BR_charon', text: 'Charon (Chirp3-HD)', lang: 'pt-BR' }, { value: 'pt_BR_despina', text: 'Despina (Chirp3-HD)', lang: 'pt-BR' },
+        { value: 'pt_BR_enceladus', text: 'Enceladus (Chirp3-HD)', lang: 'pt-BR' }, { value: 'pt_BR_erinome', text: 'Erinome (Chirp3-HD)', lang: 'pt-BR' },
+        { value: 'pt_BR_fenrir', text: 'Fenrir (Chirp3-HD)', lang: 'pt-BR' }, { value: 'pt_BR_gacrux', text: 'Gacrux (Chirp3-HD)', lang: 'pt-BR' },
+        { value: 'pt_BR_iapetus', text: 'Iapetus (Chirp3-HD)', lang: 'pt-BR' }, { value: 'pt_BR_kore', text: 'Kore (Chirp3-HD)', lang: 'pt-BR' },
+        { value: 'pt_BR_laomedeia', text: 'Laomedeia (Chirp3-HD)', lang: 'pt-BR' }, { value: 'pt_BR_leda', text: 'Leda (Chirp3-HD)', lang: 'pt-BR' },
+        { value: 'pt_BR_orus', text: 'Orus (Chirp3-HD)', lang: 'pt-BR' }, { value: 'pt_BR_puck', text: 'Puck (Chirp3-HD)', lang: 'pt-BR' },
+        { value: 'pt_BR_pulcherrima', text: 'Pulcherrima (Chirp3-HD)', lang: 'pt-BR' }, { value: 'pt_BR_rasalgethi', text: 'Rasalgethi (Chirp3-HD)', lang: 'pt-BR' },
+        { value: 'pt_BR_sadachbia', text: 'Sadachbia (Chirp3-HD)', lang: 'pt-BR' }, { value: 'pt_BR_sadaltager', text: 'Sadaltager (Chirp3-HD)', lang: 'pt-BR' },
+        { value: 'pt_BR_schedar', text: 'Schedar (Chirp3-HD)', lang: 'pt-BR' }, { value: 'pt_BR_sulafat', text: 'Sulafat (Chirp3-HD)', lang: 'pt-BR' },
+        { value: 'pt_BR_umbriel', text: 'Umbriel (Chirp3-HD)', lang: 'pt-BR' }, { value: 'pt_BR_vindemiatrix', text: 'Vindemiatrix (Chirp3-HD)', lang: 'pt-BR' },
+        { value: 'pt_BR_zephyr', text: 'Zephyr (Chirp3-HD)', lang: 'pt-BR' }, { value: 'pt_BR_zubenelgenubi', text: 'Zubenelgenubi (Chirp3-HD)', lang: 'pt-BR' },
+        { value: 'pt_BR_neural2_a', text: 'Neural2 A', lang: 'pt-BR' }, { value: 'pt_BR_wavenet_a', text: 'Wavenet A', lang: 'pt-BR' }, { value: 'pt_BR_wavenet_b', text: 'Wavenet B', lang: 'pt-BR' },
+        // Czech (cs-CZ) Chirp3-HD + Wavenet B
+        { value: 'cs_CZ_achernar', text: 'Achernar (Chirp3-HD)', lang: 'cs-CZ' }, { value: 'cs_CZ_achird', text: 'Achird (Chirp3-HD)', lang: 'cs-CZ' },
+        { value: 'cs_CZ_algenib', text: 'Algenib (Chirp3-HD)', lang: 'cs-CZ' }, { value: 'cs_CZ_algieba', text: 'Algieba (Chirp3-HD)', lang: 'cs-CZ' },
+        { value: 'cs_CZ_alnilam', text: 'Alnilam (Chirp3-HD)', lang: 'cs-CZ' }, { value: 'cs_CZ_aoede', text: 'Aoede (Chirp3-HD)', lang: 'cs-CZ' },
+        { value: 'cs_CZ_autonoe', text: 'Autonoe (Chirp3-HD)', lang: 'cs-CZ' }, { value: 'cs_CZ_callirrhoe', text: 'Callirrhoe (Chirp3-HD)', lang: 'cs-CZ' },
+        { value: 'cs_CZ_charon', text: 'Charon (Chirp3-HD)', lang: 'cs-CZ' }, { value: 'cs_CZ_despina', text: 'Despina (Chirp3-HD)', lang: 'cs-CZ' },
+        { value: 'cs_CZ_enceladus', text: 'Enceladus (Chirp3-HD)', lang: 'cs-CZ' }, { value: 'cs_CZ_erinome', text: 'Erinome (Chirp3-HD)', lang: 'cs-CZ' },
+        { value: 'cs_CZ_fenrir', text: 'Fenrir (Chirp3-HD)', lang: 'cs-CZ' }, { value: 'cs_CZ_gacrux', text: 'Gacrux (Chirp3-HD)', lang: 'cs-CZ' },
+        { value: 'cs_CZ_iapetus', text: 'Iapetus (Chirp3-HD)', lang: 'cs-CZ' }, { value: 'cs_CZ_kore', text: 'Kore (Chirp3-HD)', lang: 'cs-CZ' },
+        { value: 'cs_CZ_laomedeia', text: 'Laomedeia (Chirp3-HD)', lang: 'cs-CZ' }, { value: 'cs_CZ_leda', text: 'Leda (Chirp3-HD)', lang: 'cs-CZ' },
+        { value: 'cs_CZ_orus', text: 'Orus (Chirp3-HD)', lang: 'cs-CZ' }, { value: 'cs_CZ_puck', text: 'Puck (Chirp3-HD)', lang: 'cs-CZ' },
+        { value: 'cs_CZ_pulcherrima', text: 'Pulcherrima (Chirp3-HD)', lang: 'cs-CZ' }, { value: 'cs_CZ_rasalgethi', text: 'Rasalgethi (Chirp3-HD)', lang: 'cs-CZ' },
+        { value: 'cs_CZ_sadachbia', text: 'Sadachbia (Chirp3-HD)', lang: 'cs-CZ' }, { value: 'cs_CZ_sadaltager', text: 'Sadaltager (Chirp3-HD)', lang: 'cs-CZ' },
+        { value: 'cs_CZ_schedar', text: 'Schedar (Chirp3-HD)', lang: 'cs-CZ' }, { value: 'cs_CZ_sulafat', text: 'Sulafat (Chirp3-HD)', lang: 'cs-CZ' },
+        { value: 'cs_CZ_umbriel', text: 'Umbriel (Chirp3-HD)', lang: 'cs-CZ' }, { value: 'cs_CZ_vindemiatrix', text: 'Vindemiatrix (Chirp3-HD)', lang: 'cs-CZ' },
+        { value: 'cs_CZ_zephyr', text: 'Zephyr (Chirp3-HD)', lang: 'cs-CZ' }, { value: 'cs_CZ_zubenelgenubi', text: 'Zubenelgenubi (Chirp3-HD)', lang: 'cs-CZ' },
+        { value: 'cs_CZ_wavenet_b', text: 'Wavenet B', lang: 'cs-CZ' },
+        // Russian (ru-RU) Chirp3-HD + Wavenet C,D
+        { value: 'ru_RU_aoede', text: 'Aoede (Chirp3-HD)', lang: 'ru-RU' }, { value: 'ru_RU_charon', text: 'Charon (Chirp3-HD)', lang: 'ru-RU' },
+        { value: 'ru_RU_fenrir', text: 'Fenrir (Chirp3-HD)', lang: 'ru-RU' }, { value: 'ru_RU_kore', text: 'Kore (Chirp3-HD)', lang: 'ru-RU' },
+        { value: 'ru_RU_leda', text: 'Leda (Chirp3-HD)', lang: 'ru-RU' }, { value: 'ru_RU_orus', text: 'Orus (Chirp3-HD)', lang: 'ru-RU' },
+        { value: 'ru_RU_puck', text: 'Puck (Chirp3-HD)', lang: 'ru-RU' }, { value: 'ru_RU_zephyr', text: 'Zephyr (Chirp3-HD)', lang: 'ru-RU' },
+        { value: 'ru_RU_wavenet_c', text: 'Wavenet C', lang: 'ru-RU' }, { value: 'ru_RU_wavenet_d', text: 'Wavenet D', lang: 'ru-RU' },
+        // Arabic (ar-XA) Standard + Wavenet
+        { value: 'ar_XA_standard_a', text: 'Standard A', lang: 'ar-XA' }, { value: 'ar_XA_standard_b', text: 'Standard B', lang: 'ar-XA' },
+        { value: 'ar_XA_wavenet_b', text: 'Wavenet B', lang: 'ar-XA' }, { value: 'ar_XA_wavenet_d', text: 'Wavenet D', lang: 'ar-XA' },
+        // New languages
+        { value: 'bg_BG_standard_b', text: 'Bulgarian Standard B', lang: 'bg-BG' },
+        { value: 'ca_ES_standard_b', text: 'Catalan Standard B', lang: 'ca-ES' },
+        { value: 'he_IL_standard_a', text: 'Hebrew Standard A', lang: 'he-IL' }, { value: 'he_IL_wavenet_a', text: 'Hebrew Wavenet A', lang: 'he-IL' },
+        { value: 'ro_RO_standard_b', text: 'Romanian Standard B', lang: 'ro-RO' }, { value: 'ro_RO_wavenet_b', text: 'Romanian Wavenet B', lang: 'ro-RO' },
+        { value: 'th_TH_neural2_c', text: 'Thai Neural2 C', lang: 'th-TH' }, { value: 'th_TH_standard_a', text: 'Thai Standard A', lang: 'th-TH' }
+    ];
+    var LANGS_ORDER = ['pl-PL','en-US','en-GB','en-AU','de-DE','fr-FR','fr-CA','es-ES','it-IT','nl-Nl','da-DK','nb-NO','sv-SE','fi-FI','el-GR','tr-TR','ru-RU','uk-UA','pl-PL','cs-CZ','sk-SK','hu-HU','ro-RO','ar-XA','he-IL','hi-IN','en-IN','th-TH','cmn-CN','ja-JP','ko-KR','id-ID','fil-PH','vi-VN','pt-PT','pt-BR'];
+    var LANG_NAMES = { 'da-DK':'Danish','nl-Nl':'Dutch','en-AU':'English (Australia)','en-GB':'English (UK)','en-US':'English (US)','ar-XA':'Arabic','bg-BG':'Bulgarian','ca-ES':'Catalan','cmn-CN':'Chinese (Mandarin)','cs-CZ':'Czech','de-DE':'German','el-GR':'Greek','en-IN':'English (India)','es-ES':'Spanish (Spain)','es-US':'Spanish (US)','fi-FI':'Finnish','fil-PH':'Filipino','fr-CA':'French (Canada)','fr-FR':'French (France)','he-IL':'Hebrew','hi-IN':'Hindi','hu-HU':'Hungarian','id-ID':'Indonesian','it-IT':'Italian','ja-JP':'Japanese','ko-KR':'Korean','nb-NO':'Norwegian','pl-PL':'Polish','pt-BR':'Portuguese (Brazil)','pt-PT':'Portuguese (Portugal)','ro-RO':'Romanian','ru-RU':'Russian','sk-SK':'Slovak','sv-SE':'Swedish','th-TH':'Thai','tr-TR':'Turkish','uk-UA':'Ukrainian','vi-VN':'Vietnamese' };
+    var byLang = {}, voiceToLang = {};
+    VOICES_LIST.forEach(function(o) {
+        if (o.lang) {
+            if (!byLang[o.lang]) byLang[o.lang] = [];
+            byLang[o.lang].push({ value: o.value, text: o.text });
+            voiceToLang[o.value] = o.lang;
+        }
+    });
+    var langCodes = [];
+    for (var c in byLang) langCodes.push(c);
+    langCodes.sort(function(a,b) { return (LANG_NAMES[a]||a).localeCompare(LANG_NAMES[b]||b); });
+    window.WAVENET_LANGUAGES = langCodes.map(function(c) { return { code: c, name: LANG_NAMES[c] || c }; });
+    window.WAVENET_VOICES_BY_LANG = byLang;
+    window.WAVENET_VOICE_TO_LANG = voiceToLang;
+    window.WAVENET_POPULATE_VOICES = function(lang) {
+        var $sel = $("#node-input-voice"), chosen = $sel.val();
+        $sel.empty();
+        $sel.append($("<option></option>").attr("value", "random").text("Random"));
+        if (lang === 'pl-PL') $sel.append($("<option></option>").attr("value", "random_pl").text("Random only Polish"));
+        var list = WAVENET_VOICES_BY_LANG[lang];
+        if (list) list.forEach(function(o) { $sel.append($("<option></option>").attr("value", o.value).text(o.text)); });
+        if (chosen && $sel.find("option[value='" + chosen + "']").length) $sel.val(chosen);
+        else if (list && list.length) $sel.val(list[0].value);
+    };
+})();
+</script>
+
 <script type="text/x-red" data-template-name="wavenet">
     <div class="form-row">
 		<label for="node-input-name"><i class="icon-tag"></i>Name</label>
@@ -73,105 +310,12 @@
     </div>
 	
 	<div class="form-row">
+        <label for="node-input-language"><i class="icon-tag"></i>Language</label>
+        <select id="node-input-language"></select>
+    </div>
+	<div class="form-row">
         <label for="node-input-voice"><i class="icon-tag"></i>Voice</label>
-        <select id="node-input-voice">
-            <option value='random' selected>Random</option>
-            <option value='random_pl'>Random only Polish</option>
-            <option value='mathew'>Mathew (American male)</option>
-            <option value='justin'>Justin (American male)</option>
-            <option value='joanna'>Joanna (American female)</option>
-            <option value='ivy'>Ivy (American female)</option>
-            <option value='kimberly'>Kimberly (American female)</option>
-            <option value='salli'>Salli (American female)</option>
-            <option value='amina'>Amina (Arabian female)</option>
-            <option value='amir'>Amir (Arabian male)</option>
-            <option value='russel'>Russel (Australian male)</option>
-            <option value='thomas'>Thomas (Australian male)</option>
-            <option value='nicole'>Nicole (Australian female)</option>
-            <option value='mary'>Mary (Australian female)</option>
-            <option value='brian'>Brian (British male)</option>
-            <option value='emma'>Emma (British female)</option>
-            <option value='amy'>Amy (British female)</option>
-            <option value='chen'>Chen (Chinese Mandarin female)</option>
-            <option value='chang'>Chang (Chinese Mandarin male)</option>
-            <option value='hu'>Hu (Chinese Mandarin male)</option>
-            <option value='mei'>Mei (Chinese Mandarin female)</option>
-            <option value='lucie'>Lucie (Czech female)</option>
-            <option value='anne'>Anne (Danish female)</option>
-            <option value='lucas'>Lucas (Danish male)</option>
-            <option value='janjaap'>Janjaap (Dutch male)</option>
-            <option value='kees'>Kees (Dutch male)</option>
-            <option value='sjaan'>Sjaan (Dutch female)</option>
-            <option value='bep'>Bep (Dutch female)</option>
-            <option value='miep'>Miep (Dutch female)</option>
-            <option value='ella'>Ella (Finnish female)</option>
-            <option value='sofia'>Sofia (German female)</option>
-            <option value='ben'>Ben (German male)</option>
-            <option value='lyra'>Lyra (Greek female)</option>
-            <option value='aparna'>Aparna (Inidan female)</option>
-            <option value='rahul'>Rahul (Indian male)</option>
-            <option value='darna'>Darna (Filippino female)</option>
-            <option value='olivia'>Olivia (French Canadian female)</option>
-            <option value='liam'>Liam (French Canadian male)</option>
-            <option value='sarah'>Sarah (French female)</option>
-            <option value='victor'>Victor (French male)</option>
-            <option value='simran'>Simran (Hindi female)</option>
-            <option value='jai'>Jai (Hindi male)</option>
-            <option value='nora'>Nora (Hungarian female)</option>
-            <option value='melati'>Melati (Indonesian female)</option>
-            <option value='agung'>Agung (Indonesian male)</option>
-            <option value='gabriella'>Gabriella (Italian female)</option>
-            <option value='antonio'>Antonio (Italian male)</option>
-            <option value='yuna'>Yuna (Japanese female)</option>
-            <option value='asahi'>Asahi (Japanese male)</option>
-            <option value='misun'>Misun (Korean female)</option>
-            <option value='kyong'>Kyong (Korean male)</option>
-            <option value='leah'>Leah (Norwegian female)</option>
-            <option value='lucas'>Lucas (Norwegian male)</option>
-            <option value='amelia'>Amelia (Polish female, Wavenet)</option>
-            <option value='filip'>Filip (Polish male, Wavenet)</option>
-            <option value='pl_achernar'>Achernar (Polish female, Chirp3-HD)</option>
-            <option value='pl_achird'>Achird (Polish male, Chirp3-HD)</option>
-            <option value='pl_algenib'>Algenib (Polish male, Chirp3-HD)</option>
-            <option value='pl_algieba'>Algieba (Polish male, Chirp3-HD)</option>
-            <option value='pl_alnilam'>Alnilam (Polish male, Chirp3-HD)</option>
-            <option value='pl_aoede'>Aoede (Polish female, Chirp3-HD)</option>
-            <option value='pl_autonoe'>Autonoe (Polish female, Chirp3-HD)</option>
-            <option value='pl_callirrhoe'>Callirrhoe (Polish female, Chirp3-HD)</option>
-            <option value='pl_charon'>Charon (Polish male, Chirp3-HD)</option>
-            <option value='pl_despina'>Despina (Polish female, Chirp3-HD)</option>
-            <option value='pl_enceladus'>Enceladus (Polish male, Chirp3-HD)</option>
-            <option value='pl_erinome'>Erinome (Polish female, Chirp3-HD)</option>
-            <option value='pl_fenrir'>Fenrir (Polish male, Chirp3-HD)</option>
-            <option value='pl_gacrux'>Gacrux (Polish female, Chirp3-HD)</option>
-            <option value='pl_iapetus'>Iapetus (Polish male, Chirp3-HD)</option>
-            <option value='pl_kore'>Kore (Polish female, Chirp3-HD)</option>
-            <option value='pl_laomedeia'>Laomedeia (Polish female, Chirp3-HD)</option>
-            <option value='pl_leda'>Leda (Polish female, Chirp3-HD)</option>
-            <option value='pl_orus'>Orus (Polish male, Chirp3-HD)</option>
-            <option value='pl_puck'>Puck (Polish male, Chirp3-HD)</option>
-            <option value='pl_pulcherrima'>Pulcherrima (Polish female, Chirp3-HD)</option>
-            <option value='pl_rasalgethi'>Rasalgethi (Polish male, Chirp3-HD)</option>
-            <option value='pl_sadachbia'>Sadachbia (Polish male, Chirp3-HD)</option>
-            <option value='pl_sadaltager'>Sadaltager (Polish male, Chirp3-HD)</option>
-            <option value='pl_schedar'>Schedar (Polish male, Chirp3-HD)</option>
-            <option value='pl_sulafat'>Sulafat (Polish female, Chirp3-HD)</option>
-            <option value='pl_umbriel'>Umbriel (Polish male, Chirp3-HD)</option>
-            <option value='pl_vindemiatrix'>Vindemiatrix (Polish female, Chirp3-HD)</option>
-            <option value='pl_zephyr'>Zephyr (Polish female, Chirp3-HD)</option>
-            <option value='pl_zubenelgenubi'>Zubenelgenubi (Polish male, Chirp3-HD)</option>
-            <option value='maria'>Maria (Portugese female)</option>
-            <option value='tomas'>Tomas (Portugese male)</option>
-            <option value='nadia'>Nadia (Russian female)</option>
-            <option value='anatoly'>Anatoly (Russian male)</option>
-            <option value='laura'>Laura (Slovak female)</option>
-            <option value='lilly'>Lilly (Swedish female)</option>
-            <option value='defne'>Defne (Turkish female)</option>
-            <option value='yusuf'>Yusuf (Turkish male)</option>
-            <option value='alina'>Alina (Ukranian female)</option>
-            <option value='bian'>Bian (Vietnamese female)</option>
-            <option value='danh'>Danh (Vietnamese male)</option>
-        </select>
+        <select id="node-input-voice"></select>
     </div>
 	
 	<div class="form-row">
