@@ -613,6 +613,11 @@ const randomItem = (arrayOfItems) => {
 const getVoice = (voice) => {
 	voice = (voice == 'random') ? randomItem(Object.keys(voice_options)) : voice;
 	let chosen = voice_options[voice];
+	if (!chosen) {
+		// Unknown key: treat as 'random' to avoid crash
+		voice = randomItem(Object.keys(voice_options));
+		chosen = voice_options[voice];
+	}
 	let data = {
 		languageCode: chosen.language,
 		ssmlGender: chosen.gender,
@@ -695,7 +700,8 @@ module.exports = function (RED) {
 			let txt = msg.payload;
 
 			//Checks to see if the msg contains any overriding values before defaulting to config
-			let voice = msg.voice != null ? msg.voice : getVoice(config.voice);
+			// msg.voice can be a string key (e.g. "joanna", "pl_achernar", "random") from the dropdown
+			let voice = msg.voice != null ? getVoice(msg.voice) : getVoice(config.voice);
 
 			// get audio config options
 			voice.config = {
