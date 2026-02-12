@@ -611,7 +611,12 @@ const randomItem = (arrayOfItems) => {
 };
 
 const getVoice = (voice) => {
-	voice = (voice == 'random') ? randomItem(Object.keys(voice_options)) : voice;
+	if (voice == 'random') {
+		voice = randomItem(Object.keys(voice_options));
+	} else if (voice == 'random_pl') {
+		const polishKeys = Object.keys(voice_options).filter(k => voice_options[k].language === 'pl-PL');
+		voice = randomItem(polishKeys.length ? polishKeys : Object.keys(voice_options));
+	}
 	let chosen = voice_options[voice];
 	if (!chosen) {
 		// Unknown key: treat as 'random' to avoid crash
